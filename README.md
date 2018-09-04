@@ -58,6 +58,10 @@ $db->when(["_id" => "ucak-3"])->update(["name" => "F-".time()],true);
 $db->when(["_id" => "ucak-4"])->update(["name" => "F-".time()],true);
 ```
 
+#### _Remove_
+```php
+$db->when(["age" => ['$gt' => 20]])->remove();
+```
 
 
 
