@@ -1,0 +1,29 @@
+{
+    "name": "atiksoftware/php.class.db.mongodb",
+    "description": "PHP MongoDB database class",
+	"keywords": [
+        "mongo",
+        "mongodb",
+        "database",
+        "class",
+        "model",
+        "php"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Atiksoftware Corporation",
+            "email": "atiksoftware@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0",
+        "ext-mongodb": "*"
+    },
+    "autoload" : {
+        "psr-4" : {
+            "Atiksoftware\\Database\\" : "src"
+        }
+    }
+}
