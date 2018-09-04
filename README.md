@@ -33,13 +33,30 @@ $db->setCollection("posts");
 #### _Select_
 ```php
 $db
-		->orderBy(["_id" => 1])
-		->projectBy(["title.TR" => 1])
-		->limit(1)
-		->skip(1)
-		->select();
+    ->orderBy(["_id" => 1])
+    ->projectBy(["title.TR" => 1])
+    ->limit(1)
+    ->skip(1)
+    ->select();
 ```
 
+#### _Insert_
+```php
+$db->insert([ "_id" => "ucak-0", "name" => "F-".time() ]);
+$db->insert([
+    [ "_id" => "ucak-1", "name" => "F-".time() ],
+    [ "_id" => "ucak-2", "name" => "F-".time() ],
+    [ "_id" => "ucak-3", "name" => "F-".time() ],
+],true);
+```
+
+#### _Update_
+```php
+$db->when(["_id" => "ucak-1"])->update(["name" => "F-".time()],true);
+$db->when(["_id" => "ucak-2"])->update(["name" => "F-".time()],true);
+$db->when(["_id" => "ucak-3"])->update(["name" => "F-".time()],true);
+$db->when(["_id" => "ucak-4"])->update(["name" => "F-".time()],true);
+```
 
 
 
