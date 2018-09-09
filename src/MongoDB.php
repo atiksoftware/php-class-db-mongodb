@@ -51,7 +51,7 @@
 			return $this;
 		}
 
-		public function setDatebase($dbName){
+		public function setDatabase($dbName){
 			if(PHP_MAJOR_VERSION == 5){
 				$this->db = $this->driver->selectDB($dbName);
 			}
