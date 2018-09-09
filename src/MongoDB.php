@@ -9,9 +9,11 @@
 		public $driver = null;
 
 
+		public $db     = null; #
 		public $dbName = null; #
 		public $before_dbName = null; #
 
+		public $cl     = null;
 		public $clName = null;
 		public $before_clName = null;
 
@@ -21,11 +23,22 @@
 		public $rules_limit      = null;
 		public $rules_skip       = null;
 
+		public $opt_fsync = false;
+
 		public function __construct(){
 
 		}
 
 		public function connect($hostname = "", $username = "", $password = ""){
+			if(PHP_MAJOR_VERSION == 5){
+				$this->driver = new \MongoClient(
+					$hostname,
+					[
+						'username' => $username,
+						'password' => $password
+					]
+				);
+			}
 			if(PHP_MAJOR_VERSION == 7){
 				$this->driver = new \MongoDB\Driver\Manager(
 					$hostname,
@@ -39,12 +52,23 @@
 		}
 
 		public function setDatebase($dbName){
+			if(PHP_MAJOR_VERSION == 5){
+				$this->db = $this->driver->selectDB($dbName);
+			}
+			if(PHP_MAJOR_VERSION == 7){
+			}
+
 			$this->before_dbName = $this->dbName;
 			$this->dbName        = $dbName;
 			return $this;
-		}
+		} 
 
 		public function setCollection($clName){
+			if(PHP_MAJOR_VERSION == 5){
+				$this->cl = new \MongoCollection($this->db, $clName);
+			}
+			if(PHP_MAJOR_VERSION == 7){
+			}
 			$this->before_clName = $this->clName;
 			$this->clName        = $clName;
 			return $this;
@@ -103,6 +127,14 @@
 		/*####### functions #######*/
 
 		public function select(){
+			if(PHP_MAJOR_VERSION == 5){
+				$rows = $this->cl
+				->find($this->rules_when,$this->rules_projection)
+				->sort($this->rules_order)
+				->limit($this->rules_limit)
+				->skip($this->rules_skip);
+				$result = iterator_to_array($rows);
+			}
 			if(PHP_MAJOR_VERSION == 7){
 				$options = [
 					'projection' => $this->rules_projection,
@@ -122,46 +154,89 @@
 			$this->resetRules();
 			return $result;
 		}
-		public function insert($data,$multiple = false){
-			$bulk = new \MongoDB\Driver\BulkWrite(['ordered' => true]);
-			if($multiple){
-				foreach($data as $row){
-					$bulk->insert($row);
+		public function insert($data,$isBulk = false){
+			if(PHP_MAJOR_VERSION == 5){
+				$insert_options = [
+					"fsync" => $this->opt_fsync
+				];
+				if($isBulk){
+					foreach($data as $row){
+						$this->cl->insert($row,$insert_options);
+					}
+				}else{
+					$this->cl->insert($data,$insert_options);
 				}
-			}else{
-				$bulk->insert($data);
 			}
-			$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk);
+
+			if(PHP_MAJOR_VERSION == 7){
+				$bulk = new \MongoDB\Driver\BulkWrite(['ordered' => true]);
+				if($isBulk){
+					foreach($data as $row){
+						$bulk->insert($row);
+					}
+				}else{
+					$bulk->insert($data);
+				}
+				$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk);
+			}
 			return $this;
 		}
-		public function update($data = [], $overwrite = false, $multiple = false){
+		public function update($data = [], $overwrite = false, $multiple = true, $isBulk = false){
+			if(PHP_MAJOR_VERSION == 5){
 			$prop["upsert"] = $overwrite;
-			$bulk = new \MongoDB\Driver\BulkWrite;
-			if($multiple){
-				foreach($data as $row){
-					$bulk->update($this->rules_when,$row,$prop);
+			$prop["multiple"] = $multiple;
+				if($isBulk){
+					foreach($data as $row){
+						$this->cl->update($this->rules_when,$row,$prop);
+					}
+				}else{
+					$this->cl->update($this->rules_when,$data,$prop);
 				}
-			}else{
-				$bulk->update($this->rules_when,$data,$prop);
+
 			}
-			$writeConcern = new \MongoDB\Driver\WriteConcern(\MongoDB\Driver\WriteConcern::MAJORITY, 10000);
-			$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk,$writeConcern);
+			if(PHP_MAJOR_VERSION == 7){
+				$prop["upsert"] = $overwrite;
+				$prop["multi"] = $multiple;
+				$bulk = new \MongoDB\Driver\BulkWrite;
+				if($isBulk){
+					foreach($data as $row){
+						$bulk->update($this->rules_when,$row,$prop);
+					}
+				}else{
+					$bulk->update($this->rules_when,$data,$prop);
+				}
+				$writeConcern = new \MongoDB\Driver\WriteConcern(\MongoDB\Driver\WriteConcern::MAJORITY, 10000);
+				$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk,$writeConcern);
+			}
 			$this->resetRules();
 			return $this;
 		}
 		function remove(){
-			$bulk = new \MongoDB\Driver\BulkWrite(['ordered' => true]);
-			$bulk->delete($this->rules_when);
-			$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk);
+			if(PHP_MAJOR_VERSION == 5){
+				$this->cl->remove($this->rules_when);
+			}
+			if(PHP_MAJOR_VERSION == 7){
+				$bulk = new \MongoDB\Driver\BulkWrite(['ordered' => true]);
+				$bulk->delete($this->rules_when);
+				$this->driver->executeBulkWrite("{$this->dbName}.{$this->clName}", $bulk);
+			}
 			$this->resetRules();
 			return $this;
 		}
 
 
 		public function count(){
-			$command = new \MongoDB\Driver\Command(["count" => $this->clName, "query" => $this->rules_when]);
-			$Result = $this->driver->executeCommand($this->dbName, $command);
-			return $Result->toArray()[0]->n;
+			$c = 0;
+			if(PHP_MAJOR_VERSION == 5){
+				$c = $this->cl->count($this->rules_when);
+			}
+			if(PHP_MAJOR_VERSION == 7){
+				$command = new \MongoDB\Driver\Command(["count" => $this->clName, "query" => $this->rules_when]);
+				$Result = $this->driver->executeCommand($this->dbName, $command);
+				$c = $Result->toArray()[0]->n;
+			}
+			$this->resetRules();
+			return (int)$c;
 		}
 
 

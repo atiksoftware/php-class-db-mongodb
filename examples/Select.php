@@ -5,12 +5,12 @@
 	use Atiksoftware\Database\MongoDB;
 
 	$db = new MongoDB();
-	# C-connect to server
-	$db->connect("mongodb://127.0.0.1:27017", "username","password");
+	# connect to server ->  ("mongodb://127.0.0.1:27017","swainDb","Ss_*++1236547852")
+	$db->connect(CONF_DB_MONGODB_HOSTNAME, CONF_DB_MONGODB_USERNAME,CONF_DB_MONGODB_PASSWORD);
 	# connect to database
 	$db->setDatebase("public_swain_test");
 	# connect to Collection
-	$db->setCollection("posts");
+	$db->setCollection("testler");
 
 	$rows = $db
 		->orderBy(["_id" => 1])
