@@ -1,6 +1,6 @@
 # PHP MongoDB database class
 
-This is php class for connect to mogodb with php. Its working on PHP.7 for now. i will add functions for php.5x
+This is php class for connect to mogodb with php. Its working on PHP.5 mongo and PHP.7 mongodb  
 
 ----------
 ## Installation
