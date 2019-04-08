@@ -17,9 +17,7 @@
             "email": "atiksoftware@gmail.com"
         }
     ],
-    "require": {
-        "php": ">=7.0.0",
-        "ext-mongodb": "*"
+    "require": { 
     },
     "autoload" : {
         "psr-4" : {
